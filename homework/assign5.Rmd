@@ -54,6 +54,10 @@ se <- sd(samp)/sqrt(60)
 lower <- sample_mean - 1.96 * se
 upper <- sample_mean + 1.96 * se
 c(lower, upper)
+se <- sd(samp)/sqrt(60)
+lower <- sample_mean + qnorm(.025) * se
+upper <- sample_mean + qnorm(.975) * se
+c(lower, upper)
 ```
 
 This is an important inference that we’ve just made: even though we don’t know what the full population looks like, we’re 95% confident that the true average size of houses in Ames lies between the values lower and upper. There are a few conditions that must be met for this interval to be valid.
@@ -165,6 +169,8 @@ Then run `plot_ci` with our upper and lower bounds together with the population 
 
 ```{r}
 plot_ci(lower, upper, mean(population))
+ci.max <- max(rowSums(matrix(c(-1*lower, upper),ncol=2)))
+
 ```
 
 # Question 4
@@ -186,7 +192,18 @@ Question 5 [MULTIPLE CHOICE] What is the appropriate critical value for a 99% co
 
 Calculate 50 confidence intervals at the 99% confidence level. Do not obtain new samples. Simply calculate new intervals based on the sample means and standard deviations you have already collected. Using the plot_ci function, plot all intervals and calculate the proportion of intervals that include the true population mean. What proportion do you get? Use a seed of 123.
 
+```{r}
+lower <- samp_mean - 2.33 * samp_sd/sqrt(n)
+upper <- samp_mean + 2.33 * samp_sd/sqrt(n)
+```
+
+```{r}
+plot_ci(lower, upper, mean(population))
+```
+
+
 # Extra Question 1
+
 
 Go through each line of `plot_ci` and briefly describe what it does.  Use the line numbers from https://pastebin.com/GUDjgjWe to indicate which line you are describing.
 
@@ -195,8 +212,9 @@ Go through each line of `plot_ci` and briefly describe what it does.  Use the li
 Depending on your data collection, it may be hard to get a sample of size 60. One issue we will have if we have smaller sample is that we will need to use the Student's t-distribution.  The sample standard deviation in particular is the calculation that will require the t-distribution because the t-distribution has "fatter tails" when the degrees-of-freedom parameter is low.  Let's say we have a sample of size 15.  If we want to find the critical values for 95\% confidence level using a 14 degrees-of-freedom t-distribution ($df=n-1$), we would use $t^*=2.14$ instead of $z^*=1.96$
 
 ```{r}
-qt(.025, 19)
-qt(.975, 19)
+df<-n-1
+qt(.025, df)
+qt(.975, df)
 ```
 
 To show this, let's rerun our earlier simulation with $n=15$ instead of $60$:
@@ -224,7 +242,20 @@ How many confidence intervals do not contain the true population mean now?
 # Question 8
 
 We can see that the small sample size statistically led to more intervals that did not contain the population mean. Use the t-distribution to find critical values and then re-run the simulation and see if it fixes the problem, i.e. fewer intervals that do not contain the population mean.
-
+```{r}
+samp_mean <- rep(NA, 50)
+samp_sd <- rep(NA, 50)
+n <- 15
+set.seed(123)
+for(i in 1:50){
+   samp <- sample(population, n)  # obtain a sample of size n = 60 from the population
+   samp_mean[i] <- mean(samp)     # save sample mean in ith element of samp_mean
+   samp_sd[i] <- sd(samp)         # save sample sd in ith element of samp_sd
+}
+lower <- samp_mean - qt(.975,14) * samp_sd/sqrt(n)
+upper <- samp_mean + qt(.975,14) * samp_sd/sqrt(n)
+plot_ci(lower, upper, mean(population))
+```
 
 # Submission
 
